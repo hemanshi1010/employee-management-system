@@ -176,6 +176,18 @@
                         <h4 class="card-title mb-0 text-primary text-center">Employee List</h4>
                     </div>
                     <div class="card-body p-0">
+                        <!-- Search Input -->
+                        <div class="px-4 py-3 border-bottom bg-light">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                                    </svg>
+                                </span>
+                                <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Search by name or ID...">
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
@@ -221,14 +233,20 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Phase 2: Create Default Data
-        const employees = [
+        // Phase 2: Create Default Data (Load from localStorage if exists)
+        const defaultEmployees = [
             { id: 101, name: "John Doe", salary: 45000, gender: "Male" },
             { id: 102, name: "Jane Smith", salary: 52000, gender: "Female" },
             { id: 103, name: "Robert Brown", salary: 38000, gender: "Male" },
             { id: 104, name: "Emily Davis", salary: 41000, gender: "Female" },
             { id: 105, name: "Michael Wilson", salary: 47000, gender: "Male" }
         ];
+
+        let employees = JSON.parse(localStorage.getItem('employees')) || defaultEmployees;
+
+        const saveToStorage = () => {
+            localStorage.setItem('employees', JSON.stringify(employees));
+        };
 
         // Logging the array to console
         console.log("Employees Data:", employees);
@@ -288,12 +306,17 @@
             }
         };
 
-        // Updated renderTable to include edit function call and summary updates
-        const renderTable = () => {
+        // Updated renderTable to include search filtering and storage saving
+        const renderTable = (searchTerm = "") => {
             employeeTableBody.innerHTML = '';
             let totalSalaryValue = 0;
 
-            employees.forEach((emp) => {
+            const filteredEmployees = employees.filter(emp => 
+                emp.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                emp.id.toString().includes(searchTerm)
+            );
+
+            filteredEmployees.forEach((emp) => {
                 totalSalaryValue += emp.salary;
                 const row = `
                 <tr>
@@ -311,9 +334,16 @@
             });
 
             // Update Summary
-            document.getElementById('totalEmployees').innerText = employees.length;
+            document.getElementById('totalEmployees').innerText = filteredEmployees.length;
             document.getElementById('totalSalary').innerText = `$${totalSalaryValue.toLocaleString()}`;
+
+            saveToStorage();
         };
+
+        // Add real-time search listener
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            renderTable(e.target.value);
+        });
 
         // Initial render
         renderTable();
